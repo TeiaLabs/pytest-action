@@ -1,0 +1,64 @@
+name: "Test with Pytest"
+
+description: "Checkout Code, Setup Python, Install Dependencies and run Pytest"
+
+inputs:
+  deps-directory:
+    description: Where to search for requirements files.
+    required: false
+    default: "."
+    type: string
+
+  source-directory:
+    description: What folder to search for requirements.
+    required: true
+    type: string
+
+  module-directory:
+    description: What module to test.
+    required: true
+    type: string
+
+  extra-arguments:
+    description: Additonal args to pass to pytest.
+    required: false
+    type: string
+
+  ignore-errors:
+    description: Whether to continue on error.
+    required: false
+    default: false
+    type: boolean
+
+runs:
+  using: "composite"
+  steps:
+    - name: Load Cache & Dependencies
+      uses: teialabs/python-dependencies-action@master
+      with:
+        deps-directory: ${{ inputs.deps-directory }}
+        application: true
+        test: true
+
+    - name: Test Module
+      continue-on-error: ${{ inputs.ignore-errors == 'true' }}
+      run: >
+        pytest ${{ inputs.module-directory }}
+        --cov=${{ inputs.module-directory }}
+        --cov-report xml 
+        --junitxml=xunit-result.xml
+        ${{ inputs.extra-arguments }}
+      working-directory: ${{ inputs.source-directory }}
+      shell: bash
+
+    - name: Upload pytest execution results
+      uses: actions/upload-artifact@v3
+      with:
+        name: pytest-exec-results
+        path: ${{ inputs.source-directory }}/xunit-result.xml
+
+    - name: Upload pytest coverage results
+      uses: actions/upload-artifact@v3
+      with:
+        name: pytest-cov-results
+        path: ${{ inputs.source-directory }}/coverage.xml
