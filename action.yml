@@ -3,13 +3,13 @@ name: "Test with Pytest"
 description: "Checkout Code, Setup Python, Install Dependencies and run Pytest"
 
 inputs:
-  deps-directory:
+  dependencies-directory:
     description: Where to search for requirements files.
     required: false
     default: "."
     type: string
 
-  source-directory:
+  tests-directory:
     description: What folder to search for requirements.
     required: true
     type: string
@@ -30,13 +30,24 @@ inputs:
     default: false
     type: boolean
 
+  execution-report:
+    description: Path to save execution report.
+    required: false
+    default: xunit-result
+    type: string
+  coverage-report:
+    description: Path to save coverage report.
+    required: false
+    default: coverage
+    type: string
+
 runs:
   using: "composite"
   steps:
     - name: Load Cache & Dependencies
-      uses: teialabs/python-dependencies-action@master
+      uses: TeiaLabs/python-dependencies-action@master
       with:
-        deps-directory: ${{ inputs.deps-directory }}
+        dependencies-directory: ${{ inputs.dependencies-directory }}
         application: true
         test: true
 
@@ -45,20 +56,20 @@ runs:
       run: >
         pytest ${{ inputs.module-directory }}
         --cov=${{ inputs.module-directory }}
-        --cov-report xml 
-        --junitxml=xunit-result.xml
+        --cov-report xml:${{ inputs.coverage-report }} 
+        --junitxml=${{ inputs.execution-report }} 
         ${{ inputs.extra-arguments }}
-      working-directory: ${{ inputs.source-directory }}
+      working-directory: ${{ inputs.tests-directory }}
       shell: bash
 
     - name: Upload pytest execution results
       uses: actions/upload-artifact@v3
       with:
         name: pytest-exec-results
-        path: ${{ inputs.source-directory }}/xunit-result.xml
+        path: ${{ inputs.tests-directory }}/${{ inputs.execution-report }}.xml
 
     - name: Upload pytest coverage results
       uses: actions/upload-artifact@v3
       with:
         name: pytest-cov-results
-        path: ${{ inputs.source-directory }}/coverage.xml
+        path: ${{ inputs.tests-directory }}/${{ inputs.coverage-report }}.xml
