@@ -56,8 +56,8 @@ runs:
       run: >
         pytest ${{ inputs.module-directory }}
         --cov=${{ inputs.module-directory }}
-        --cov-report xml:${{ inputs.coverage-report }} 
-        --junitxml=${{ inputs.execution-report }} 
+        --cov-report xml:${{ inputs.coverage-report }}.xml
+        --junitxml=${{ inputs.execution-report }}.xml
         ${{ inputs.extra-arguments }}
       working-directory: ${{ inputs.tests-directory }}
       shell: bash
